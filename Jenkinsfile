@@ -1,12 +1,10 @@
-def DOCKER_CREDENTIALS_ID = 'dockerID'
-
 pipeline {
     agent any
     environment {
         PROJECT_ID = 'multi-k8s-420306'
         CLUSTER_NAME = 'autopilot-cluster-1'
         LOCATION = 'asia-south1'
-        CREDENTIALS_ID = 'multi-k8s'
+        DOCKER_CREDENTIALS_ID = 'dockerID'
     }
     stages {
         stage("Checkout code") {
@@ -24,7 +22,7 @@ pipeline {
         stage("Push image") {
             steps {
                 script {
-                    docker.withRegistry('https://registry.hub.docker.com', dockerID) {
+                    docker.withRegistry('https://index.docker.io/v1/', dockerID) {
                         myapp.push("latest")
                         myapp.push("${env.BUILD_ID}")
                     }
@@ -34,7 +32,7 @@ pipeline {
         stage('Deploy to GKE') {
             steps {
                 sh "sed -i 's/hello:latest/hello:${env.BUILD_ID}/g' deployment.yaml"
-                step([$class: 'KubernetesEngineBuilder', projectId: env.multi-k8s-420306, clusterName: env.autopilot-cluster-1, location: env.asia-south1, manifestPattern: 'deployment.yaml', credentialsId: env.multi-k8s, verifyDeployments: true])
+                step([$class: 'KubernetesEngineBuilder', projectId: env.PROJECT_ID, clusterName: env.CLUSTER_NAME, location: env.LOCATION, manifestPattern: 'deployment.yaml', credentialsId: env.DOCKER_CREDENTIALS_ID, verifyDeployments: true])
             }
         }
     }    
