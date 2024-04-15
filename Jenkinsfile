@@ -6,7 +6,7 @@ pipeline {
         CLUSTER_NAME = 'autopilot-cluster-1'
         CLUSTER_ZONE = 'asia-south1'
         DOCKER_IMAGE_TAG = 'latest'
-        DOCKER_IMAGE_NAME = "gcr.io/${multi-k8s-420306}/myapp:${latest}"
+        DOCKER_IMAGE_NAME = "gcr.io/${PROJECT_ID}/myapp:${DOCKER_IMAGE_TAG}"
     }
 
     stages {
@@ -24,8 +24,8 @@ pipeline {
 
         stage('Push Docker Image to GCR') {
             steps {
-                
-                    sh 'cat $GOOGLE_APPLICATION_CREDENTIALS | docker login -u _json_key --password-stdin https://gcr.io/multi-k8s/myapp:latest'
+                withCredentials([file(credentialsId: 'gcpcredentials', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
+                    sh 'cat $GOOGLE_APPLICATION_CREDENTIALS | docker login -u _json_key --password-stdin https://gcr.io'
                     sh "docker push ${DOCKER_IMAGE_NAME}"
                 }
             }
@@ -33,10 +33,11 @@ pipeline {
 
         stage('Deploy to GKE') {
             steps {
-                withCredentials([file(credentialsId: 'GCPCredentials', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
+                withCredentials([file(credentialsId: 'gcpcredentials', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
                     sh "gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${CLUSTER_ZONE} --project ${PROJECT_ID}"
                     sh "kubectl apply -f ."
                 }
             }
         }
     }
+}
