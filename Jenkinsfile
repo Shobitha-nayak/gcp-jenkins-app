@@ -5,6 +5,7 @@ pipeline {
         CLUSTER_NAME = 'autopilot-cluster-1'
         LOCATION = 'asia-south1'
         CREDENTIALS_ID = 'multi-k8s'
+        DOCKER_CREDENTIALS_ID = 'dockerID'
     }
     stages {
         stage("Checkout code") {
