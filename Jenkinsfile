@@ -6,12 +6,12 @@ pipeline {
         LOCATION = 'asia-south1'
         CREDENTIALS_ID = 'multi-k8s'
     }
-    stage("Checkout code") {
-    steps {
-        checkout([$class: 'GitSCM', branches: [[name: '*/main']], userRemoteConfigs: [[url: 'https://github.com/Shobitha-nayak/gcp-jenkins-app.git']], credentialsId: 'git-credentials-id'])
-    }
-}
-
+    stages {
+        stage("Checkout code") {
+            steps {
+                checkout scm
+            }
+        }
         stage("Build image") {
             steps {
                 script {
@@ -36,3 +36,4 @@ pipeline {
             }
         }
     }    
+}
