@@ -14,8 +14,10 @@ pipeline {
         }
         stage("Build image") {
             steps {
-                script {
-                    myapp = docker.build("shobithaunayak24/hello:${env.BUILD_ID}")
+                timeout(time: 20, unit: 'MINUTES'){
+                    script{
+                        myapp = docker.build("shobithaunayak24/hello:${env.BUILD_ID}")
+                    }
                 }
             }
         }
