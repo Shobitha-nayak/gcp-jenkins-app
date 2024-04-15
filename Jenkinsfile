@@ -25,7 +25,7 @@ pipeline {
         stage('Push Docker Image to GCR') {
             steps {
                 withCredentials([file(credentialsId: 'gcpcredentials', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
-                    sh 'cat $GOOGLE_APPLICATION_CREDENTIALS | docker login -u _json_key --password-stdin https://gcr.io'
+                    sh 'cat $GOOGLE_APPLICATION_CREDENTIALS | docker login -u _json_key --password-stdin https://gcr.io/multi-k8s/myapp:latest'
                     sh "docker push ${DOCKER_IMAGE_NAME}"
                 }
             }
@@ -35,7 +35,8 @@ pipeline {
             steps {
                 withCredentials([file(credentialsId: 'gcpcredentials', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
                     sh "gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${CLUSTER_ZONE} --project ${PROJECT_ID}"
-                    sh "kubectl apply -f ."
+                    sh "kubectl apply -f deployment.yaml"
+                    sh "kubectl apply -f service.yaml"
                 }
             }
         }
