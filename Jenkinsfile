@@ -15,7 +15,7 @@ pipeline {
         stage("Build image") {
             steps {
                 script {
-                    def myapp = docker.build("shobithaunayak24/hello:${env.BUILD_ID}")
+                    def dockerImage = docker.build("shobithaunayak24/hello:${env.BUILD_ID}")
                 }
             }
         }
@@ -23,17 +23,17 @@ pipeline {
             steps {
                 script {
                     docker.withRegistry('https://index.docker.io/v1/', dockerID) {
-                        myapp.push("latest")
-                        myapp.push("${env.BUILD_ID}")
+                        dockerImage.push("latest")
+                        dockerImage.push("${env.BUILD_ID}")
                     }
                 }
             }
-        }        
+        }
         stage('Deploy to GKE') {
             steps {
-                sh "sed -i 's/hello:latest/hello:${env.BUILD_ID}/g' deployment.yaml"
+                sh "sed -i 's|shobithaunayak24/hello:latest|shobithaunayak24/hello:${env.BUILD_ID}|g' deployment.yaml"
                 step([$class: 'KubernetesEngineBuilder', projectId: env.PROJECT_ID, clusterName: env.CLUSTER_NAME, location: env.LOCATION, manifestPattern: 'deployment.yaml', credentialsId: env.DOCKER_CREDENTIALS_ID, verifyDeployments: true])
             }
         }
-    }    
+    }
 }
