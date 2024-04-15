@@ -24,9 +24,13 @@ pipeline {
         stage("Push image") {
             steps {
                 script {
-                    docker.withRegistry('https://registry.hub.docker.com', 'dockerID') {
-                            myapp.push("latest")
-                            myapp.push("${env.BUILD_ID}")
+                    docker.withRegistry('https://index.docker.io/v1/', 'dockerID') {
+    // Use --password-stdin for secure password input
+    sh "echo 'shobitha2405P@' | docker login -u shobithaunayak24 --password-stdin"
+
+    // Your Docker push and other commands here
+}
+
                     }
                 }
             }
