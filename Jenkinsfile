@@ -6,7 +6,7 @@ pipeline {
         CLUSTER_NAME = 'autopilot-cluster-1'
         CLUSTER_ZONE = 'asia-south1'
         DOCKER_IMAGE_TAG = 'latest'
-        DOCKER_IMAGE_NAME = "gcr.io/$multi-k8s-420306/myapp:$latest"
+        DOCKER_IMAGE_NAME = "gcr.io/${multi-k8s-420306}/myapp:${latest}"
     }
 
     stages {
@@ -33,12 +33,11 @@ pipeline {
 
         stage('Deploy to GKE') {
             steps {
-                withCredentials([file(credentialsId: 'GCPCredentials', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
+                withCredentials([file(credentialsId: 'multi-k8s-420306', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
                     sh "gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${CLUSTER_ZONE} --project ${PROJECT_ID}"
                     sh "kubectl apply -f ."
                 }
             }
         }
     }
-}
 
