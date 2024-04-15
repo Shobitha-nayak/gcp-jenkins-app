@@ -1,43 +1,44 @@
 pipeline {
     agent any
-    
+
     environment {
-        IMAGE_NAME = 'gcr.io/multi-k8s-420306/myapp'
-        TAG = 'latest'
         PROJECT_ID = 'multi-k8s-420306'
+        CLUSTER_NAME = 'autopilot-cluster-1'
+        CLUSTER_ZONE = 'asia-south1'
+        DOCKER_IMAGE_TAG = 'latest'
+        DOCKER_IMAGE_NAME = "gcr.io/$multi-k8s-420306/myapp:$latest"
     }
-    
+
     stages {
-        stage('Authenticate Docker') {
+        stage('Copy Repository Contents') {
             steps {
-                sh 'gcloud auth configure-docker'
+                git branch: 'main', url: 'https://github.com/Shobitha-nayak/gcp-jenkins-app.git'
             }
         }
-        
+
         stage('Build Docker Image') {
             steps {
-                script {
-                    sh "docker build -t $IMAGE_NAME:$TAG ."
+                sh "docker build -t ${DOCKER_IMAGE_NAME} ."
+            }
+        }
+
+        stage('Push Docker Image to GCR') {
+            steps {
+                
+                    sh 'cat $GOOGLE_APPLICATION_CREDENTIALS | docker login -u _json_key --password-stdin https://gcr.io'
+                    sh "docker push ${DOCKER_IMAGE_NAME}"
                 }
             }
         }
-        
-        stage('Push to Container Registry') {
+
+        stage('Deploy to GKE') {
             steps {
-                script {
-                    sh "docker tag $IMAGE_NAME:$TAG gcr.io/$PROJECT_ID/$IMAGE_NAME:$TAG"
-                    sh "docker push gcr.io/$PROJECT_ID/$IMAGE_NAME:$TAG"
-                }
-            }
-        }
-        
-        stage('Deploy to Kubernetes') {
-            steps {
-                script {
-                    sh "kubectl apply -f deployment.yaml"
-                    sh "kubectl apply -f service.yaml"
+                withCredentials([file(credentialsId: 'GCPCredentials', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
+                    sh "gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${CLUSTER_ZONE} --project ${PROJECT_ID}"
+                    sh "kubectl apply -f ."
                 }
             }
         }
     }
 }
+
