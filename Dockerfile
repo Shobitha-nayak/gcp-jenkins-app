@@ -1,20 +1,30 @@
+# Builder stage
 FROM bitnami/node:9 as builder
-ENV NODE_ENV="production"
+ENV NODE_ENV=production
 
-# Copy app's source code to the /app directory
-COPY . /app
-
-# The application's directory will be the working directory
 WORKDIR /app
 
-# Install Node.js dependencies defined in '/app/packages.json'
+# Copy only package.json and package-lock.json
+COPY package*.json ./
+
+# Install Node.js dependencies
 RUN npm install
 
+# Copy the rest of the application code
+COPY . .
+
+# Final stage
 FROM bitnami/node:9-prod
-ENV NODE_ENV="production"
-COPY --from=builder /app /app
+
+ENV NODE_ENV=production \
+    PORT=5000
+
 WORKDIR /app
-ENV PORT 5000
+
+# Copy built application from the builder stage
+COPY --from=builder /app .
+
+# Expose port
 EXPOSE 5000
 
 # Start the application
