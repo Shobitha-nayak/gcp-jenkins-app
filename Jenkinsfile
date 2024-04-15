@@ -25,7 +25,7 @@ pipeline {
         stage('Push Docker Image to GCR') {
             steps {
                 
-                    sh 'cat $GOOGLE_APPLICATION_CREDENTIALS | docker login -u _json_key --password-stdin https://gcr.io'
+                    sh 'cat /home/hii/Downloads/multi-k8s-420306-f783c2fe8570.json | docker login -u _json_key --password-stdin https://gcr.io'
                     sh "docker push ${DOCKER_IMAGE_NAME}"
                 }
             }
