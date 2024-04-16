@@ -4,9 +4,10 @@ pipeline {
     environment {
         PROJECT_ID = 'multi-k8s-420306'
         CLUSTER_NAME = 'autopilot-cluster-1'
-        CLUSTER_ZONE = 'asia-south1'
+        LOCATION = 'asia-south1'
         DOCKER_IMAGE_TAG = 'latest'
         DOCKER_IMAGE_NAME = "gcr.io/${PROJECT_ID}/myapp:${DOCKER_IMAGE_TAG}"
+        CREDENTIALS_ID = 'gcpcredentials' // Assuming you have a credential ID set up in Jenkins
     }
 
     stages {
@@ -25,7 +26,7 @@ pipeline {
         stage('Push Docker Image to GCR') {
             steps {
                 withCredentials([file(credentialsId: 'gcpcredentials', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
-                    sh 'cat $GOOGLE_APPLICATION_CREDENTIALS | docker login -u _json_key --password-stdin https://gcr.io/multi-k8s/myapp:latest'
+                    sh 'cat $GOOGLE_APPLICATION_CREDENTIALS | docker login -u _json_key --password-stdin https://gcr.io'
                     sh "docker push ${DOCKER_IMAGE_NAME}"
                 }
             }
@@ -34,11 +35,17 @@ pipeline {
         stage('Deploy to GKE') {
             steps {
                 withCredentials([file(credentialsId: 'gcpcredentials', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
-                    sh "gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${CLUSTER_ZONE} --project ${PROJECT_ID}"
-                    sh "kubectl apply -f deployment.yaml"
-                    sh "kubectl apply -f service.yaml"
+                    sh "gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${LOCATION} --project ${PROJECT_ID}"
+                    sh "kubectl apply -f deployment.yaml -f service.yaml"
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            // Clean up any temporary resources if needed
+            deleteDir()
         }
     }
 }
